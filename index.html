@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SYSTEM_ROOT_EXEC</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    body {
+        background-color: #000;
+        overflow: hidden;
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ff00;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overscroll-behavior: none;
+    }
+
+    /* Matrix Rain Canvas */
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    /* Center 300px Transparent Terminal */
+    .terminal-container {
+        position: relative;
+        z-index: 2;
+        width: 90%;
+        max-width: 550px;
+        height: 300px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 2px solid #00ff00;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header with 3 dots on each side and Center Scrolling text */
+    .terminal-header {
+        background: rgba(0, 255, 0, 0.15);
+        padding: 6px 10px;
+        border-bottom: 1px solid #00ff00;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        height: 35px;
+    }
+
+    .window-dots {
+        display: flex;
+        gap: 5px;
+        flex-shrink: 0;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #00ff00;
+    }
+
+    /* Marquee Center Container */
+    .marquee-container {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .scrolling-header-text {
+        display: inline-block;
+        color: #00ff00;
+        font-size: 0.82rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+        animation: marquee-scroll 8s linear infinite;
+        padding-left: 100%;
+    }
+
+    @keyframes marquee-scroll {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-100%); }
+    }
+
+    /* Terminal Body */
+    .terminal-body {
+        flex: 1;
+        padding: 10px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    #console-output {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .log-line {
+        font-size: 0.82rem;
+        line-height: 1.3;
+        white-space: nowrap;
+        word-break: break-all;
+    }
+
+    .warn { color: #ffff00; }
+    .danger { color: #ff0000; font-weight: bold; }
+
+    /* Active Typing Line Cursor */
+    .active-line {
+        color: #00ff00;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+    .cursor {
+        display: inline-block;
+        width: 7px;
+        height: 14px;
+        background: #00ff00;
+        vertical-align: middle;
+        margin-left: 2px;
+    }
+
+    /* Final Screen (কোনো শ্যাডো থাকবে না, একদম সলিড কালার) */
+    #final-screen {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000000;
+        z-index: 99999;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .flat-text {
+        font-family: 'Courier New', monospace;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin: 8px 0;
+    }
+
+    /* লাল আর গ্রিন কালার (নো শ্যাডো) */
+    .t1 {
+        font-size: 2.5rem;
+        color: #00ff00; /* খাঁটি সবুজ */
+    }
+
+    .t2 {
+        font-size: 1.8rem;
+        color: #ffffff; /* সাদা */
+    }
+
+    .t3 {
+        font-size: 2.8rem;
+        color: #ff0000; /* খাঁটি লাল */
+    }
+
+    /* সলিড ফ্ল্যাশিং / ব্লিঙ্কিং অ্যানিমেশন */
+    .blink {
+        animation: solid-blink 0.4s infinite steps(1, start);
+    }
+
+    @keyframes solid-blink {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+</style>
+</head>
+<body>
+
+<!-- Matrix Rain Canvas Background -->
+<canvas id="matrix-canvas"></canvas>
+
+<!-- 300px Centered Box -->
+<div class="terminal-container" id="term-box">
+    <!-- Header with 3 dots left, scrolling text center, 3 dots right -->
+    <div class="terminal-header">
+        <div class="window-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="marquee-container">
+            <div class="scrolling-header-text">YOUR SYSTEM IS HACK BY PAPI KING</div>
+        </div>
+        <div class="window-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+    
+    <div class="terminal-body">
+        <div id="console-output"></div>
+        <div class="active-line"><span id="type-target"></span><span class="cursor"></span></div>
+    </div>
+</div>
+
+<!-- Final Trap Screen (Red & Green, No Shadow) -->
+<div id="final-screen">
+    <div class="flat-text t1 blink">hack is fun</div>
+    <div class="flat-text t2">But</div>
+    <div class="flat-text t3 blink">You have been haked</div>
+</div>
+
+<script>
+    /* ==========================================================
+       ১. ADVANCED TRAP MECHANISM (ব্যাক বাটন লক ও ট্র্যাপ)
+       ========================================================== */
+    function floodHistory() {
+        for (let i = 0; i < 30; i++) {
+            window.history.pushState({ trap: i }, "", window.location.href);
+        }
+    }
+
+    // প্রাথমিক লোড স্টেট
+    window.history.pushState(null, "", window.location.href);
+
+    // ইউজার স্ক্রিনে একবার টাচ বা ক্লিক করলেই সাথে সাথে ফুলস্ক্রিন ও ৩০ লেয়ার হিস্ট্রি লক
+    function activateTrap() {
+        floodHistory();
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+    }
+
+    window.addEventListener('click', activateTrap);
+    window.addEventListener('touchstart', activateTrap);
+
+    // ব্যাক বাটন চাপলে তাকে জোর করে আটকে রাখবে
+    window.addEventListener("popstate", function () {
+        window.history.pushState(null, "", window.location.href);
+        window.history.forward();
+        floodHistory();
+    });
+
+    // পেজ বন্ধ করার চেষ্টা করলে ওয়ার্নিং
+    window.addEventListener("beforeunload", (e) => {
+        e.preventDefault();
+        e.returnValue = "SYSTEM OVERRIDE IN PROGRESS! CANNOT EXIT.";
+    });
+
+    document.addEventListener("contextmenu", e => e.preventDefault());
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "F12" || (e.ctrlKey && (e.key === "u" || e.key === "w" || e.key === "s"))) {
+            e.preventDefault();
+        }
+    });
+
+    /* ==========================================================
+       ২. MATRIX EFFECT BACKGROUND (আপনার দেওয়া অক্ষরের লজিক)
+       ========================================================== */
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    const characters = "日ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ012345789PaPiKiNg:・.\"=*+-<>ﾘç¦｜◇彡";
+    const fontSize = 16;
+    let columns = 0;
+    let drops = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        columns = Math.floor(canvas.width / fontSize);
+        drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * (canvas.height / fontSize / 2));
+        }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#00ff00';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = characters.charAt(Math.floor(Math.random() * characters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    /* ==========================================================
+       ৩. দ্রুত ক্যারেক্টার টাইপিং ও উপরে ওঠার লজিক (৬০ সেকেন্ড)
+       ========================================================== */
+    const consoleOutput = document.getElementById('console-output');
+    const typeTarget = document.getElementById('type-target');
+    const termBox = document.getElementById('term-box');
+    const finalScreen = document.getElementById('final-screen');
+
+    function getRandomHex(len) {
+        let str = "";
+        const hex = "0123456789ABCDEF";
+        for (let i = 0; i < len; i++) str += hex.charAt(Math.floor(Math.random() * hex.length));
+        return str;
+    }
+
+    const commandTemplates = [
+        () => ({ text: `>> CONNECTING PORT 443 -> IP [192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}]`, cls: "" }),
+        () => ({ text: `>> DUMPING 0x${getRandomHex(8)}: [OFFSET_${getRandomHex(4)}] STATUS_OK`, cls: "" }),
+        () => ({ text: `>> EXECUTING CVE-2024-KERNEL EXPLOIT -> ROOT SHELL INJECTED`, cls: "danger" }),
+        () => ({ text: `>> /data/data/com.whatsapp/databases/msgstore.db -> EXTRACTION`, cls: "warn" }),
+        () => ({ text: `>> BYPASSING SELINUX ENFORCING MODE: SET TO PERMISSIVE`, cls: "" }),
+        () => ({ text: `>> DOWNLOADING CONTACTS & CALL LOGS (SIZE: ${Math.floor(Math.random()*50+10)}MB)`, cls: "" }),
+        () => ({ text: `>> ACCESSING /storage/emulated/0/DCIM/Camera/IMG_${getRandomHex(4)}.jpg`, cls: "warn" }),
+        () => ({ text: `>> TRANSMITTING REVERSE SHELL PACKETS TO C2 DAEMON...`, cls: "" }),
+        () => ({ text: `>> OVERWRITING SYSTEM PARTITION SECTORS [BLOCK 0x${getRandomHex(6)}]`, cls: "danger" })
+    ];
+
+    const TOTAL_TIME_MS = 60000; // ঠিক ৬০ সেকেন্ড চলবে
+    const startTime = Date.now();
+    let isFinished = false;
+
+    function typeNextLine() {
+        if (Date.now() - startTime >= TOTAL_TIME_MS) {
+            endPrank();
+            return;
+        }
+
+        const template = commandTemplates[Math.floor(Math.random() * commandTemplates.length)]();
+        const fullText = template.text;
+        let charPos = 0;
+        typeTarget.textContent = "";
+
+        // দ্রুত ক্যারেক্টার বাই ক্যারেক্টার টাইপিং (প্রতি ক্যারেক্টার ৪ মিলি-সেকেন্ড)
+        const charTimer = setInterval(() => {
+            if (charPos < fullText.length) {
+                typeTarget.textContent += fullText.charAt(charPos);
+                charPos++;
+            } else {
+                clearInterval(charTimer);
+
+                // টাইপিং শেষ হলে লেখাটি উপরের কনসোলে পুশ হয়ে যাবে
+                const div = document.createElement('div');
+                div.className = 'log-line ' + template.cls;
+                div.textContent = fullText;
+                consoleOutput.appendChild(div);
+
+                typeTarget.textContent = "";
+
+                // বক্সের হাইট ঠিক রাখতে ওপরের লাইনগুলো রিমুভ হবে
+                if (consoleOutput.children.length > 11) {
+                    consoleOutput.removeChild(consoleOutput.children[0]);
+                }
+
+                // সঙ্গে সঙ্গে পরের লাইন টাইপ শুরু
+                setTimeout(typeNextLine, 15);
+            }
+        }, 4);
+    }
+
+    function endPrank() {
+        if (isFinished) return;
+        isFinished = true;
+        termBox.style.display = "none";
+        finalScreen.style.display = "flex";
+        setInterval(floodHistory, 50); // শেষ স্ক্রিনে ব্যাক ট্র্যাপ আরও কড়া রাখা
+    }
+
+    // টাইপিং শুরু
+    typeNextLine();
+</script>
+</body>
+</html>
