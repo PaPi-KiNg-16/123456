@@ -142,7 +142,7 @@
         margin-left: 2px;
     }
 
-    /* Final Screen (কোনো শ্যাডো থাকবে না, একদম সলিড কালার) */
+    /* Final Screen */
     #final-screen {
         display: none;
         position: fixed;
@@ -166,23 +166,21 @@
         margin: 8px 0;
     }
 
-    /* লাল আর গ্রিন কালার (নো শ্যাডো) */
     .t1 {
         font-size: 2.5rem;
-        color: #00ff00; /* খাঁটি সবুজ */
+        color: #00ff00;
     }
 
     .t2 {
         font-size: 1.8rem;
-        color: #ffffff; /* সাদা */
+        color: #ffffff;
     }
 
     .t3 {
         font-size: 2.8rem;
-        color: #ff0000; /* খাঁটি লাল */
+        color: #ff0000;
     }
 
-    /* সলিড ফ্ল্যাশিং / ব্লিঙ্কিং অ্যানিমেশন */
     .blink {
         animation: solid-blink 0.4s infinite steps(1, start);
     }
@@ -204,7 +202,6 @@
 
 <!-- 300px Centered Box -->
 <div class="terminal-container" id="term-box">
-    <!-- Header with 3 dots left, scrolling text center, 3 dots right -->
     <div class="terminal-header">
         <div class="window-dots">
             <div class="dot"></div>
@@ -227,7 +224,7 @@
     </div>
 </div>
 
-<!-- Final Trap Screen (Red & Green, No Shadow) -->
+<!-- Final Trap Screen -->
 <div id="final-screen">
     <div class="flat-text t1 blink">hack is fun</div>
     <div class="flat-text t2">But</div>
@@ -235,6 +232,12 @@
 </div>
 
 <script>
+    /* ==========================================================
+       ০. VISIT TRACKER (পেজ ওপেন হওয়া মাত্র কাউন্টারে ১ যোগ হবে)
+       ========================================================== */
+    fetch('https://api.counterapi.dev/v1/papi_king_prank_123/visits/up')
+        .catch(() => {});
+
     /* ==========================================================
        ১. ADVANCED TRAP MECHANISM (ব্যাক বাটন লক ও ট্র্যাপ)
        ========================================================== */
@@ -244,10 +247,8 @@
         }
     }
 
-    // প্রাথমিক লোড স্টেট
     window.history.pushState(null, "", window.location.href);
 
-    // ইউজার স্ক্রিনে একবার টাচ বা ক্লিক করলেই সাথে সাথে ফুলস্ক্রিন ও ৩০ লেয়ার হিস্ট্রি লক
     function activateTrap() {
         floodHistory();
         if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
@@ -258,14 +259,12 @@
     window.addEventListener('click', activateTrap);
     window.addEventListener('touchstart', activateTrap);
 
-    // ব্যাক বাটন চাপলে তাকে জোর করে আটকে রাখবে
     window.addEventListener("popstate", function () {
         window.history.pushState(null, "", window.location.href);
         window.history.forward();
         floodHistory();
     });
 
-    // পেজ বন্ধ করার চেষ্টা করলে ওয়ার্নিং
     window.addEventListener("beforeunload", (e) => {
         e.preventDefault();
         e.returnValue = "SYSTEM OVERRIDE IN PROGRESS! CANNOT EXIT.";
@@ -279,7 +278,7 @@
     });
 
     /* ==========================================================
-       ২. MATRIX EFFECT BACKGROUND (আপনার দেওয়া অক্ষরের লজিক)
+       ২. MATRIX EFFECT BACKGROUND
        ========================================================== */
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
@@ -320,7 +319,7 @@
     setInterval(drawMatrix, 33);
 
     /* ==========================================================
-       ৩. দ্রুত ক্যারেক্টার টাইপিং ও উপরে ওঠার লজিক (৬০ সেকেন্ড)
+       ৩. টাইপিং লজিক
        ========================================================== */
     const consoleOutput = document.getElementById('console-output');
     const typeTarget = document.getElementById('type-target');
@@ -346,7 +345,7 @@
         () => ({ text: `>> OVERWRITING SYSTEM PARTITION SECTORS [BLOCK 0x${getRandomHex(6)}]`, cls: "danger" })
     ];
 
-    const TOTAL_TIME_MS = 60000; // ঠিক ৬০ সেকেন্ড চলবে
+    const TOTAL_TIME_MS = 60000;
     const startTime = Date.now();
     let isFinished = false;
 
@@ -361,7 +360,6 @@
         let charPos = 0;
         typeTarget.textContent = "";
 
-        // দ্রুত ক্যারেক্টার বাই ক্যারেক্টার টাইপিং (প্রতি ক্যারেক্টার ৪ মিলি-সেকেন্ড)
         const charTimer = setInterval(() => {
             if (charPos < fullText.length) {
                 typeTarget.textContent += fullText.charAt(charPos);
@@ -369,7 +367,6 @@
             } else {
                 clearInterval(charTimer);
 
-                // টাইপিং শেষ হলে লেখাটি উপরের কনসোলে পুশ হয়ে যাবে
                 const div = document.createElement('div');
                 div.className = 'log-line ' + template.cls;
                 div.textContent = fullText;
@@ -377,12 +374,10 @@
 
                 typeTarget.textContent = "";
 
-                // বক্সের হাইট ঠিক রাখতে ওপরের লাইনগুলো রিমুভ হবে
                 if (consoleOutput.children.length > 11) {
                     consoleOutput.removeChild(consoleOutput.children[0]);
                 }
 
-                // সঙ্গে সঙ্গে পরের লাইন টাইপ শুরু
                 setTimeout(typeNextLine, 15);
             }
         }, 4);
@@ -393,10 +388,9 @@
         isFinished = true;
         termBox.style.display = "none";
         finalScreen.style.display = "flex";
-        setInterval(floodHistory, 50); // শেষ স্ক্রিনে ব্যাক ট্র্যাপ আরও কড়া রাখা
+        setInterval(floodHistory, 50);
     }
 
-    // টাইপিং শুরু
     typeNextLine();
 </script>
 </body>
